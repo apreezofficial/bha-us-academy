@@ -181,17 +181,17 @@ include '../includes/header_student.php';
                             </div>
                             <div class="min-w-0">
                                 <p class="text-[10px] font-bold uppercase tracking-widest opacity-80">Certification</p>
-                                <p class="text-sm font-black truncate">Final Assessment</p>
+                                <p class="text-sm font-black truncate">Professional Assessment</p>
                             </div>
                         </a>
                     <?php else: ?>
-                        <div class="flex items-center gap-3 p-4 rounded-2xl bg-muted/50 text-muted-foreground border border-dashed opacity-60 cursor-not-allowed">
+                        <div class="flex items-center gap-3 p-4 rounded-2xl bg-muted/30 text-muted-foreground border border-dashed opacity-60 cursor-not-allowed">
                             <div class="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                             </div>
                             <div class="min-w-0">
                                 <p class="text-[10px] font-bold uppercase tracking-widest">Locked</p>
-                                <p class="text-sm font-bold">Complete All Units</p>
+                                <p class="text-sm font-bold">Preparation Required</p>
                             </div>
                         </div>
                     <?php endif; ?>

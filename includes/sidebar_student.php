@@ -39,6 +39,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path><path d="M8 7h6"></path><path d="M8 11h8"></path></svg>
                         <span class="text-sm font-semibold group-data-[sidebar=collapsed]:hidden whitespace-nowrap">My Courses</span>
                     </a>
+                    <a href="exams.php" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg transition-all <?php echo $current_page == 'exams.php' || $current_page == 'exam_view.php' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'; ?>" title="Assessments">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path></svg>
+                        <span class="text-sm font-semibold group-data-[sidebar=collapsed]:hidden whitespace-nowrap">Assessments</span>
+                    </a>
                     <a href="certificates.php" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg transition-all <?php echo $current_page == 'certificates.php' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'; ?>" title="Credentials">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
                         <span class="text-sm font-semibold group-data-[sidebar=collapsed]:hidden whitespace-nowrap">Credentials</span>
