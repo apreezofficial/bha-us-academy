@@ -20,6 +20,7 @@ define('COLOR_SECONDARY', '#28a745'); // Green
 // Stripe Configuration
 define('STRIPE_PUBLIC_KEY', 'pk_test_placeholder');
 define('STRIPE_SECRET_KEY', 'sk_test_placeholder');
+define('STRIPE_WEBHOOK_SECRET', 'whsec_placeholder');
 
 // Helper Functions
 function img_url($path) {
