@@ -4,126 +4,133 @@ requireLogin();
 
 $exam_id = $_GET['id'] ?? null;
 if (!$exam_id) {
-    header("Location: dashboard.php");
+    header("Location: exams.php");
     exit();
 }
 
-// Fetch Exam
-$stmt = $pdo->prepare("SELECT e.*, c.title as course_title, c.id as course_id 
-    FROM exams e 
-    JOIN courses c ON e.course_id = c.id 
-    WHERE e.id = ?");
+// Fetch Exam & Course
+$stmt = $pdo->prepare("SELECT e.*, c.title as course_title FROM exams e JOIN courses c ON e.course_id = c.id WHERE e.id = ?");
 $stmt->execute([$exam_id]);
 $exam = $stmt->fetch();
 
 if (!$exam) {
-    header("Location: dashboard.php");
+    header("Location: exams.php");
+    exit();
+}
+
+// Check if already passed
+$stmt = $pdo->prepare("SELECT * FROM exam_results WHERE exam_id = ? AND user_id = ? AND status = 'passed'");
+$stmt->execute([$exam_id, $_SESSION['user_id']]);
+$passed = $stmt->fetch();
+
+if ($passed) {
+    header("Location: certificates.php");
     exit();
 }
 
 // Fetch Questions
-$stmt = $pdo->prepare("SELECT * FROM questions WHERE exam_id = ?");
+$stmt = $pdo->prepare("SELECT * FROM questions WHERE exam_id = ? ORDER BY id ASC");
 $stmt->execute([$exam_id]);
 $questions = $stmt->fetchAll();
 
-$score = null;
-$status = null;
-
-// Handle submission
+// Handle Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_exam'])) {
-    $correct_count = 0;
-    $total_count = count($questions);
-
+    $answers = $_POST['answers'] ?? [];
+    $score = 0;
+    $total_questions = count($questions);
+    
     foreach ($questions as $q) {
-        $user_ans = $_POST['q_' . $q['id']] ?? '';
-        if ($user_ans === $q['correct_answer']) {
-            $correct_count++;
+        if (isset($answers[$q['id']]) && $answers[$q['id']] == $q['correct_option']) {
+            $score++;
         }
     }
-
-    $score = ($correct_count / $total_count) * 100;
-    $status = $score >= $exam['passing_score'] ? 'pass' : 'fail';
-
-    // Save result
-    $stmt = $pdo->prepare("INSERT INTO exam_results (user_id, exam_id, score, status) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$_SESSION['user_id'], $exam_id, $score, $status]);
-
-    if ($status === 'pass') {
-        // Mark course as completed in enrollment
-        $stmt = $pdo->prepare("UPDATE enrollments SET status = 'completed', finished_at = CURRENT_TIMESTAMP WHERE user_id = ? AND course_id = ?");
+    
+    $percentage = ($total_questions > 0) ? ($score / $total_questions) * 100 : 0;
+    $status = ($percentage >= $exam['passing_score']) ? 'passed' : 'failed';
+    
+    // Save Result
+    $stmt = $pdo->prepare("INSERT INTO exam_results (exam_id, user_id, score, status, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)");
+    $stmt->execute([$exam_id, $_SESSION['user_id'], $percentage, $status]);
+    
+    if ($status === 'passed') {
+        // Update Enrollment
+        $stmt = $pdo->prepare("UPDATE enrollments SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE user_id = ? AND course_id = ?");
         $stmt->execute([$_SESSION['user_id'], $exam['course_id']]);
+        header("Location: payment_success.php?type=certificate&course_id=" . $exam['course_id']);
+    } else {
+        header("Location: exams.php?result=failed&score=" . round($percentage));
     }
+    exit();
 }
 
-$pageTitle = "Assessment";
+$pageTitle = "Assessment Console";
 include '../includes/header_student.php';
 ?>
 
-<div class="max-w-4xl mx-auto flex flex-col gap-8">
-    <header>
-        <h1 class="text-3xl font-bold tracking-tight mb-1"><?php echo $exam['title']; ?></h1>
-        <p class="text-muted-foreground italic"><?php echo $exam['course_title']; ?> Professional Qualification</p>
-        <div class="mt-6 flex flex-wrap gap-4">
-            <div class="bg-card border px-4 py-2 rounded-lg flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span class="text-[10px] font-bold uppercase tracking-widest leading-none">NO TIME LIMIT</span>
+<div class="flex flex-col gap-10 max-w-4xl mx-auto">
+    <!-- Assessment Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 text-foreground">
+        <div class="max-w-xl">
+            <h1 class="text-4xl font-black tracking-tighter mb-4 leading-none uppercase italic">Clinical Validation</h1>
+            <p class="text-muted-foreground font-medium underline decoration-brandBlue/30 underline-offset-4"><?php echo $exam['course_title']; ?>: Final Proficiency Assessment</p>
+        </div>
+        
+        <div class="flex items-center gap-3 bg-foreground text-background px-6 py-2.5 rounded-2xl shadow-2xl shadow-brandBlue/20">
+            <span class="text-[10px] font-black uppercase tracking-widest opacity-50">Target</span>
+            <span class="text-xl font-black italic tracking-tighter leading-none"><?php echo $exam['passing_score']; ?>%</span>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="bg-card border-2 border-dashed rounded-[2.5rem] p-10 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-brandBlue/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+        <div class="flex gap-8 items-start relative">
+            <div class="h-16 w-16 rounded-[1.5rem] bg-brandBlue/10 text-brandBlue flex items-center justify-center shrink-0 border border-brandBlue/20">
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path></svg>
             </div>
-            <div class="bg-card border px-4 py-2 rounded-lg flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brandGreen"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                <span class="text-[10px] font-bold uppercase tracking-widest leading-none">PASSING SCORE: <?php echo $exam['passing_score']; ?>%</span>
+            <div>
+                <h3 class="text-lg font-black uppercase tracking-tight mb-2 italic">Standardized Guidelines</h3>
+                <ul class="text-[11px] text-muted-foreground font-bold space-y-2 uppercase tracking-tight opacity-70">
+                    <li class="flex items-center gap-2"><div class="h-1 w-1 bg-brandBlue rounded-full"></div> Answer all clinical scenarios truthfully.</li>
+                    <li class="flex items-center gap-2"><div class="h-1 w-1 bg-brandBlue rounded-full"></div> Submission is permanent and recorded in registry.</li>
+                    <li class="flex items-center gap-2"><div class="h-1 w-1 bg-brandBlue rounded-full"></div> Requires <?php echo $exam['passing_score']; ?>% accuracy for certification.</li>
+                </ul>
             </div>
         </div>
-    </header>
+    </div>
 
-    <?php if ($score === null): ?>
-        <form action="exam_view.php?id=<?php echo $exam_id; ?>" method="POST" class="flex flex-col gap-6">
-            <?php foreach ($questions as $i => $q): ?>
-                <div class="bg-card border rounded-xl p-8 relative group hover:border-brandBlue transition-colors">
-                    <div class="flex gap-4 items-start mb-8">
-                        <span class="h-8 w-8 rounded-lg bg-primary/5 text-brandBlue flex items-center justify-center shrink-0 text-xs font-bold"><?php echo $i + 1; ?></span>
-                        <p class="text-lg font-bold leading-tight"><?php echo $q['question_text']; ?></p>
-                    </div>
-                    
-                    <div class="grid gap-3">
-                        <?php 
-                            $options = json_decode($q['options'], true);
-                            foreach ($options as $key => $val): 
-                        ?>
-                            <label class="flex items-center gap-4 p-4 rounded-lg bg-muted/30 border border-transparent hover:border-brandBlue cursor-pointer transition-all group/opt">
-                                <input type="radio" name="q_<?php echo $q['id']; ?>" value="<?php echo $key; ?>" required class="h-4 w-4 text-brandBlue border-muted-foreground focus:ring-brandBlue bg-background">
-                                <span class="text-sm font-medium leading-none"><?php echo $key; ?>: <?php echo $val; ?></span>
-                            </label>
-                        <?php endforeach; ?>
-                    </div>
+    <!-- Exam Form -->
+    <form method="POST" class="space-y-10 mb-20 scroll-smooth">
+        <?php foreach ($questions as $index => $q): ?>
+            <div class="bg-card border-2 border-muted hover:border-brandBlue/30 rounded-[3rem] p-12 transition-all duration-500 group relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 text-4xl font-black text-muted/20 italic select-none"><?php echo str_pad($index + 1, 2, '0', STR_PAD_LEFT); ?></div>
+                
+                <h4 class="text-xl font-black tracking-tight leading-relaxed mb-10 max-w-2xl text-foreground">
+                    <?php echo $q['question_text']; ?>
+                </h4>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <?php for ($i = 1; $i <= 4; $i++): $opt = 'option_' . $i; ?>
+                        <label class="relative flex items-center p-5 rounded-2xl border-2 border-muted bg-muted/5 cursor-pointer hover:border-brandBlue/50 hover:bg-brandBlue/5 transition-all group/opt">
+                            <input type="radio" name="answers[<?php echo $q['id']; ?>]" value="<?php echo $i; ?>" required class="hidden peer">
+                            <div class="h-6 w-6 rounded-lg border-2 border-muted flex items-center justify-center mr-6 shrink-0 peer-checked:bg-brandBlue peer-checked:border-brandBlue bg-background transition-all">
+                                <div class="h-2 w-2 rounded-sm bg-white hidden peer-checked:block"></div>
+                            </div>
+                            <span class="text-sm font-bold text-muted-foreground peer-checked:text-foreground transition-colors"><?php echo $q[$opt]; ?></span>
+                            <div class="absolute inset-0 border-2 border-transparent peer-checked:border-brandBlue rounded-2xl pointer-events-none"></div>
+                        </label>
+                    <?php endfor; ?>
                 </div>
-            <?php endforeach; ?>
-
-            <div class="pt-8">
-                <button type="submit" name="submit_exam" class="w-full h-14 bg-primary text-primary-foreground rounded-xl font-bold text-lg hover:opacity-90 shadow-lg shadow-black/10 transition-all">Submit Professional Assessment</button>
             </div>
-        </form>
-    <?php else: ?>
-        <div class="bg-card border rounded-[2rem] p-12 text-center shadow-sm relative overflow-hidden">
-            <?php if ($status === 'pass'): ?>
-                <div class="w-20 h-20 bg-brandGreen/10 text-brandGreen rounded-full flex items-center justify-center mx-auto mb-8">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                </div>
-                <h2 class="text-4xl font-black mb-4">Congratulations!</h2>
-                <p class="text-muted-foreground mb-12 text-lg">You passed the assessment with a score of <span class="text-brandGreen font-bold"><?php echo round($score, 1); ?>%</span>.</p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="certificate_pay.php?id=<?php echo $exam['course_id']; ?>" class="h-12 px-10 bg-brandGreen text-white rounded-lg font-bold flex items-center justify-center hover:opacity-90 transition-opacity">Claim Certificate</a>
-                    <a href="dashboard.php" class="h-12 px-10 bg-muted text-foreground rounded-lg font-bold flex items-center justify-center hover:bg-muted/80 transition-colors">Return to Console</a>
-                </div>
-            <?php else: ?>
-                <div class="w-20 h-20 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto mb-8">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                </div>
-                <h2 class="text-4xl font-black mb-4 uppercase italic">Assessment Failed</h2>
-                <p class="text-muted-foreground mb-12 text-lg">You scored <span class="text-destructive font-bold"><?php echo round($score, 1); ?>%</span>. You need <?php echo $exam['passing_score']; ?>% to pass.</p>
-                <a href="exam_view.php?id=<?php echo $exam_id; ?>" class="inline-flex h-12 px-12 bg-primary text-primary-foreground rounded-lg font-bold items-center justify-center hover:opacity-90 transition-opacity">Retry Assessment</a>
-            <?php endif; ?>
+        <?php endforeach; ?>
+
+        <div class="pt-10 flex justify-center">
+            <button type="submit" name="submit_exam" class="h-20 px-20 bg-brandBlue text-white rounded-[2.5rem] font-black text-xl uppercase tracking-widest shadow-2xl shadow-brandBlue/20 hover:shadow-brandBlue/40 hover:-translate-y-1 active:scale-95 transition-all flex items-center gap-4">
+                Affirm Submission
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform"><path d="m9 18 6-6-6-6"></path></svg>
+            </button>
         </div>
-    <?php endif; ?>
+    </form>
 </div>
 
 <?php include '../includes/footer_student.php'; ?>
