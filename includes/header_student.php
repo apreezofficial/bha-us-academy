@@ -8,14 +8,21 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script>
-        // High-performance theme detection
+        // Advanced Three-State Theme Detection
         (function() {
-            const theme = localStorage.getItem('theme') || 'dark';
-            if (theme === 'dark') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
+            const theme = localStorage.getItem('theme') || 'system';
+            function applyTheme(t) {
+                const isDark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', isDark);
             }
+            applyTheme(theme);
+            
+            // Reactive System Listener
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if ((localStorage.getItem('theme') || 'system') === 'system') {
+                    document.documentElement.classList.toggle('dark', e.matches);
+                }
+            });
         })();
     </script>
     <title><?php echo $pageTitle ?? 'Dashboard'; ?> | BHA Academy</title>
@@ -148,11 +155,29 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         </nav>
                     </div>
                     <div class="flex items-center gap-4">
-                        <!-- Universal Theme Toggle -->
-                        <button id="theme-nav-toggle" class="h-9 w-9 rounded-xl border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-all hover:border-brandBlue/50 shadow-sm" title="Toggle Appearance">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden dark:block"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M22 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="block dark:hidden"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
-                        </button>
+                        <!-- Universal Theme Switcher -->
+                        <div class="relative">
+                            <button id="theme-nav-toggle" class="h-9 w-9 rounded-xl border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-all hover:border-brandBlue/50 shadow-sm" title="Appearance Mode">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden dark:block"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M22 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="block dark:hidden"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div id="theme-dropdown" class="absolute right-0 mt-2 w-32 bg-card border rounded-xl shadow-2xl hidden p-1 z-50 animate-in fade-in zoom-in duration-200">
+                                <button onclick="setGlobalTheme('light')" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M22 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+                                    Light
+                                </button>
+                                <button onclick="setGlobalTheme('dark')" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+                                    Dark
+                                </button>
+                                <button onclick="setGlobalTheme('system')" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>
+                                    System
+                                </button>
+                            </div>
+                        </div>
 
                         <div class="bg-card border rounded-xl px-3 py-1.5 flex flex-col items-end hidden sm:flex shadow-sm border-dashed">
                              <span class="text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground leading-none mb-1">Status</span>
@@ -166,10 +191,25 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </header>
 
             <script>
-                document.getElementById('theme-nav-toggle').addEventListener('click', () => {
-                    const isDark = document.documentElement.classList.toggle('dark');
-                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                const themeToggle = document.getElementById('theme-nav-toggle');
+                const themeDropdown = document.getElementById('theme-dropdown');
+
+                themeToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    themeDropdown.classList.toggle('hidden');
                 });
+
+                document.addEventListener('click', () => {
+                    themeDropdown.classList.add('hidden');
+                });
+
+                function setGlobalTheme(t) {
+                    localStorage.setItem('theme', t);
+                    const isDark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                    document.documentElement.classList.toggle('dark', isDark);
+                    themeDropdown.classList.add('hidden');
+                    if (window.updateUI) window.updateUI(); // Sync settings page if open
+                }
             </script>
 
             <main class="flex-1 w-full">

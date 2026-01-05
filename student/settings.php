@@ -60,6 +60,19 @@ include '../includes/header_student.php';
                             </div>
                         </div>
                     </div>
+
+                    <!-- System Mode Wrapper -->
+                    <div id="theme-system" onclick="setTheme('system')" class="theme-option group cursor-pointer border-2 border-muted bg-muted/10 rounded-[1.5rem] p-6 transition-all hover:border-brandBlue/40 selected:border-brandBlue selected:bg-brandBlue/5">
+                        <div class="aspect-[16/10] bg-gradient-to-br from-white to-slate-950 border border-muted rounded-xl mb-4 relative overflow-hidden shadow-inner flex items-center justify-center">
+                            <span class="text-[10px] font-bold text-foreground opacity-40 uppercase tracking-widest leading-tight text-center">Clinical<br>Auto</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold">System Sync</span>
+                            <div class="h-4 w-4 rounded-full border-2 border-muted flex items-center justify-center checked:border-brandBlue">
+                                <div class="h-2 w-2 rounded-full bg-brandBlue hidden check-dot"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -123,17 +136,18 @@ include '../includes/header_student.php';
 
 <script>
     function setTheme(theme) {
-        localStorage.setItem('theme', theme);
-        if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
+        if (window.setGlobalTheme) {
+            window.setGlobalTheme(theme);
         } else {
-            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', theme);
+            const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', isDark);
         }
         updateUI();
     }
 
     function updateUI() {
-        const theme = localStorage.getItem('theme') || 'dark';
+        const theme = localStorage.getItem('theme') || 'system';
         document.querySelectorAll('.theme-option').forEach(opt => {
             opt.classList.remove('border-brandBlue', 'bg-brandBlue/5');
             opt.classList.add('border-muted', 'bg-muted/10');
@@ -147,6 +161,9 @@ include '../includes/header_student.php';
             selected.querySelector('.check-dot').classList.remove('hidden');
         }
     }
+
+    // Expose updateUI globally for navbar synchronisation
+    window.updateUI = updateUI;
 
     document.addEventListener('DOMContentLoaded', updateUI);
 </script>
