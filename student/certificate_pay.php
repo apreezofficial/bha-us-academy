@@ -49,15 +49,21 @@ if (isset($_POST['apply_voucher'])) {
 // Final Calculations
 $base_price = $course_data['price'];
 $hard_copy_price = 25.00; // Standard price for hard copy
-$total_price = $base_price - $voucher_discount;
+$total_price = max(0, $base_price - $voucher_discount);
 
-// Handle Payment Redirection to Stripe
+// Handle Payment Redirection or Instant Claim
 if (isset($_POST['pay_now'])) {
     $include_hard_copy = isset($_POST['hard_copy']);
     $final_amount = $total_price + ($include_hard_copy ? $hard_copy_price : 0);
     
-    // Redirect to Checkout
-    header("Location: checkout.php?course_id=$course_id&amount=$final_amount&type=certificate");
+    // Check for free claim
+    if ($final_amount <= 0) {
+        // Direct issuance for free
+        header("Location: checkout.php?course_id=$course_id&amount=0&type=certificate");
+    } else {
+        // Redirect to Stripe Checkout
+        header("Location: checkout.php?course_id=$course_id&amount=$final_amount&type=certificate");
+    }
     exit();
 }
 
@@ -177,7 +183,7 @@ include '../includes/header_student.php';
 
                 <div class="space-y-4">
                     <button form="payForm" name="pay_now" class="w-full h-16 bg-brandBlue text-white rounded-2xl font-black text-lg hover:shadow-2xl hover:shadow-brandBlue/20 hover:-translate-y-0.5 active:translate-y-0 transition-all uppercase tracking-widest flex items-center justify-center gap-3">
-                        Proceed to Payment
+                        <span id="buttonText"><?php echo ($total_price <= 0) ? 'Claim Instant Access' : 'Proceed to Payment'; ?></span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="m9 18 6-6-6-6"></path></svg>
                     </button>
                     
@@ -204,12 +210,16 @@ include '../includes/header_student.php';
         const hardCopyPrice = <?php echo $hard_copy_price; ?>;
 
         hardCopyToggle.addEventListener('change', function() {
+            const buttonText = document.getElementById('buttonText');
             if (this.checked) {
                 hardCopyRow.classList.remove('hidden');
-                totalDisplay.innerText = '£' + (totalBase + hardCopyPrice).toFixed(2);
+                const newTotal = (totalBase + hardCopyPrice);
+                totalDisplay.innerText = '£' + newTotal.toFixed(2);
+                buttonText.innerText = 'Proceed to Payment';
             } else {
                 hardCopyRow.classList.add('hidden');
                 totalDisplay.innerText = '£' + totalBase.toFixed(2);
+                buttonText.innerText = totalBase <= 0 ? 'Claim Instant Access' : 'Proceed to Payment';
             }
         });
     });

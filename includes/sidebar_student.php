@@ -96,17 +96,31 @@ $current_page = basename($_SERVER['PHP_SELF']);
 </aside>
 
 <style>
-.custom-sidebar-scroll::-webkit-scrollbar { width: 4px; }
-.custom-sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
-.custom-sidebar-scroll::-webkit-scrollbar-thumb { background: hsl(var(--muted)); border-radius: 10px; }
+.custom-sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+}
+.custom-sidebar-scroll::-webkit-scrollbar { 
+    width: 4px; 
+}
+.custom-sidebar-scroll::-webkit-scrollbar-track { 
+    background: transparent; 
+}
+.custom-sidebar-scroll::-webkit-scrollbar-thumb { 
+    background: hsl(var(--muted)); 
+    border-radius: 20px; 
+}
+.custom-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+}
 
-/* Icon-only tooltip support if needed via title attribute is default, 
-   but we can add a custom one if user wants something fancy. 
-   For now, strictly complying with 'turn those sidenav to icons' */
-   
 body[data-sidebar="collapsed"] .sidebar-link {
     justify-content: center;
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+body[data-sidebar="collapsed"] .sidebar-link svg {
+    margin-right: 0;
 }
 </style>

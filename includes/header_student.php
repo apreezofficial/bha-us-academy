@@ -142,22 +142,35 @@ $current_page = basename($_SERVER['PHP_SELF']);
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-left"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path></svg>
                         </button>
                         <nav class="flex items-center gap-2 text-sm text-muted-foreground overflow-hidden">
-                            <a href="dashboard.php" class="hover:text-foreground transition-colors shrink-0">BHA Academy</a>
-                            <span class="shrink-0">/</span>
-                            <span class="font-medium text-foreground truncate"><?php echo $pageTitle ?? 'Overview'; ?></span>
+                            <a href="dashboard.php" class="hover:text-foreground transition-colors shrink-0 font-bold uppercase tracking-tighter">BHA Academy</a>
+                            <span class="shrink-0 opacity-20">/</span>
+                            <span class="font-black text-foreground truncate uppercase text-[10px] tracking-widest bg-muted px-2 py-0.5 rounded"><?php echo $pageTitle ?? 'Overview'; ?></span>
                         </nav>
                     </div>
                     <div class="flex items-center gap-4">
-                        <div class="bg-card border rounded-lg px-3 py-1 flex flex-col items-end hidden sm:flex shadow-sm">
-                             <span class="text-[9px] font-bold uppercase tracking-wider text-muted-foreground leading-none mb-1">Status</span>
-                             <span class="text-xs font-bold text-brandGreen leading-none uppercase tracking-tighter">Active Learner</span>
+                        <!-- Universal Theme Toggle -->
+                        <button id="theme-nav-toggle" class="h-9 w-9 rounded-xl border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-all hover:border-brandBlue/50 shadow-sm" title="Toggle Appearance">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden dark:block"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M22 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="block dark:hidden"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+                        </button>
+
+                        <div class="bg-card border rounded-xl px-3 py-1.5 flex flex-col items-end hidden sm:flex shadow-sm border-dashed">
+                             <span class="text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground leading-none mb-1">Status</span>
+                             <span class="text-[10px] font-black text-brandGreen leading-none uppercase tracking-tighter italic">Verified Learner</span>
                         </div>
-                        <div class="h-8 w-8 rounded-lg bg-brandBlue text-white flex items-center justify-center font-bold text-xs shadow-sm ring-1 ring-white/20">
+                        <a href="profile.php" class="h-9 w-9 rounded-xl bg-brandBlue text-white flex items-center justify-center font-black text-xs shadow-xl shadow-brandBlue/10 ring-2 ring-white/10 hover:scale-105 transition-transform">
                             <?php echo substr($_SESSION['user_name'], 0, 1); ?>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </header>
+
+            <script>
+                document.getElementById('theme-nav-toggle').addEventListener('click', () => {
+                    const isDark = document.documentElement.classList.toggle('dark');
+                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                });
+            </script>
 
             <main class="flex-1 w-full">
                 <div class="container max-w-7xl mx-auto p-4 md:p-8 pt-6">

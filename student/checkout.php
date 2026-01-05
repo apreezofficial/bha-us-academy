@@ -17,12 +17,25 @@ $stmt = $pdo->prepare("SELECT title FROM courses WHERE id = ?");
 $stmt->execute([$course_id]);
 $course_title = $stmt->fetchColumn() ?: 'Professional Certification';
 
-// 1. Create a pending transaction
-$stmt = $pdo->prepare("INSERT INTO transactions (user_id, item_type, item_id, amount, payment_method, status) VALUES (?, ?, ?, ?, 'stripe', 'pending')");
-$stmt->execute([$user_id, $type, $course_id, $amount]);
+// 1. Create transaction record
+$initial_status = ($amount <= 0) ? 'completed' : 'pending';
+$stmt = $pdo->prepare("INSERT INTO transactions (user_id, item_type, item_id, amount, payment_method, status) VALUES (?, ?, ?, ?, 'system', ?)");
+$stmt->execute([$user_id, $type, $course_id, $amount, $initial_status]);
 $transaction_id = $pdo->lastInsertId();
 
-// 2. Create Stripe Checkout Session via API (CURL)
+// 2. Handle Free Access Immediately
+if ($amount <= 0) {
+    if ($type === 'certificate') {
+        // Issue Certificate
+        $cert_num = "BHA-" . strtoupper(bin2hex(random_bytes(4)));
+        $stmt = $pdo->prepare("INSERT INTO certificates (user_id, course_id, certificate_number, issued_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)");
+        $stmt->execute([$user_id, $course_id, $cert_num]);
+    }
+    header("Location: payment_success.php?tx=" . $transaction_id);
+    exit;
+}
+
+// 3. Create Stripe Checkout Session (only for paid)
 $api_url = "https://api.stripe.com/v1/checkout/sessions";
 $post_data = [
     'payment_method_types' => ['card'],
