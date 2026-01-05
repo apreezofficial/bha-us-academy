@@ -22,6 +22,7 @@ if (!$course_data) {
 }
 
 $message = '';
+$message_type = 'info';
 $voucher_discount = 0;
 
 // Handle voucher check
@@ -38,8 +39,10 @@ if (isset($_POST['apply_voucher'])) {
             $voucher_discount = $voucher['discount_value'];
         }
         $message = "Voucher applied! £" . number_format($voucher_discount, 2) . " discount.";
+        $message_type = 'success';
     } else {
         $message = "Invalid or expired voucher.";
+        $message_type = 'error';
     }
 }
 
@@ -57,161 +60,159 @@ if (isset($_POST['pay_now'])) {
     header("Location: checkout.php?course_id=$course_id&amount=$final_amount&type=certificate");
     exit();
 }
+
+$pageTitle = "Checkout";
+include '../includes/header_student.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Get Your Certificate | BHA Academy</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brandBlue: '#0056b3',
-                        brandGreen: '#28a745',
-                    }
-                }
-            }
-        }
-    </script>
-</head>
-<body class="bg-[#F8FAFC] flex min-h-screen text-sm">
 
-    <?php include '../includes/sidebar.php'; ?>
+<div class="flex flex-col gap-10">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div class="max-w-xl">
+            <h1 class="text-4xl font-black tracking-tighter mb-4 leading-none uppercase">Certification Checkout</h1>
+            <p class="text-muted-foreground font-medium">Claim your professional credentials for <span class="text-foreground font-bold"><?php echo $course_data['course_title']; ?></span>.</p>
+        </div>
+        
+        <div class="flex items-center gap-2 bg-muted/30 px-4 py-2 rounded-full border border-dashed">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Security Status</span>
+            <div class="h-2 w-2 rounded-full bg-brandGreen"></div>
+            <span class="text-xs font-bold leading-none uppercase tracking-tighter">Encrypted</span>
+        </div>
+    </div>
 
-    <main class="flex-grow p-8">
-        <div class="max-w-4xl mx-auto">
-            <header class="mb-12">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Certification & Checkout</h1>
-                <p class="text-gray-500">Claim your professional credentials for <span class="text-brandBlue font-bold"><?php echo $course_data['course_title']; ?></span>.</p>
-            </header>
+    <?php if ($message): ?>
+        <div class="p-4 rounded-2xl border flex items-center gap-4 <?php echo $message_type == 'success' ? 'bg-brandGreen/10 text-brandGreen border-brandGreen/20' : ($message_type == 'error' ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-brandBlue/10 text-brandBlue border-brandBlue/20'); ?>">
+            <div class="h-10 w-10 rounded-xl bg-background/50 flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+            </div>
+            <p class="text-sm font-bold"><?php echo $message; ?></p>
+        </div>
+    <?php endif; ?>
 
-            <?php if ($message): ?>
-                <div class="bg-blue-50 text-brandBlue p-4 rounded-xl mb-8 border border-blue-100 flex items-center shadow-sm">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
-                    <?php echo $message; ?>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <!-- Delivery Options -->
+        <div class="space-y-8">
+            <div class="bg-card border rounded-[2rem] p-8 shadow-sm">
+                <h3 class="font-bold text-foreground text-sm uppercase tracking-widest mb-6 flex items-center border-b pb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-brandGreen"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path></svg>
+                    Certificate Options
+                </h3>
+                
+                <form action="certificate_pay.php?id=<?php echo $course_id; ?>" method="POST" id="payForm" class="space-y-4">
+                    <label class="flex items-start p-6 rounded-2xl border-2 border-brandBlue bg-brandBlue/5 cursor-pointer relative overflow-hidden group">
+                        <input type="radio" checked class="hidden">
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-foreground text-base">Soft Copy (e-PDF)</span>
+                                <span class="text-[10px] font-black uppercase tracking-tighter bg-brandBlue text-white px-2 py-0.5 rounded">Included</span>
+                            </div>
+                            <p class="text-[11px] text-muted-foreground leading-relaxed font-medium">Instantly downloadable, professionally accredited, and verifiable via unique QR code system.</p>
+                        </div>
+                        <div class="absolute top-0 right-0 w-10 h-10 bg-brandBlue text-white rounded-bl-3xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start p-6 rounded-2xl border-2 border-muted hover:border-brandGreen transition-all cursor-pointer group bg-card">
+                        <input type="checkbox" name="hard_copy" id="hard_copy_toggle" class="mt-1 h-5 w-5 rounded border-muted-foreground/30 text-brandGreen focus:ring-brandGreen bg-background">
+                        <div class="ml-4 flex-grow">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-foreground text-base group-hover:text-brandGreen transition-colors">Physical Hard Copy</span>
+                                <span class="text-sm font-black text-foreground">+ £<?php echo number_format($hard_copy_price, 2); ?></span>
+                            </div>
+                            <p class="text-[11px] text-muted-foreground leading-relaxed font-medium">Standard clinical ID card printed on premium PVC. Sent to your address with tracked shipping.</p>
+                        </div>
+                    </label>
+
+                    <div class="mt-10">
+                        <label class="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Redeem Referral or Voucher</label>
+                        <div class="flex gap-2">
+                            <input type="text" name="voucher_code" class="flex-grow h-12 bg-muted/50 px-4 rounded-xl border border-muted focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none text-sm font-bold uppercase tracking-wider" placeholder="ENTER CODE">
+                            <button type="submit" name="apply_voucher" class="h-12 bg-foreground text-background px-8 rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-lg active:scale-95">Verify</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-muted/10 p-6 rounded-[2rem] border border-dashed text-center">
+                <div class="flex items-center justify-center gap-2 mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <h4 class="font-bold text-foreground text-xs uppercase tracking-widest">Global Accreditation</h4>
                 </div>
-            <?php endif; ?>
+                <p class="text-[11px] text-muted-foreground leading-relaxed font-medium">All certificates are CPD certified and recognized globally in clinical and professional environments.</p>
+            </div>
+        </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                <!-- Payment Options -->
-                <div class="space-y-8">
-                    <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-                        <h3 class="font-bold text-gray-900 mb-6 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-brandGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Certificate Options
-                        </h3>
-                        <form action="certificate_pay.php?id=<?php echo $course_id; ?>" method="POST" id="payForm">
-                            <div class="space-y-4">
-                                <label class="flex items-start p-5 rounded-2xl border-2 border-brandBlue bg-blue-50/50 cursor-pointer relative overflow-hidden group">
-                                    <input type="radio" checked class="hidden">
-                                    <div class="flex-grow">
-                                        <div class="flex justify-between items-center mb-1">
-                                            <span class="font-bold text-gray-900">Soft Copy (PDF)</span>
-                                            <span class="text-brandBlue font-extrabold">INCLUDED</span>
-                                        </div>
-                                        <p class="text-xs text-gray-500 leading-relaxed">Instantly downloadable, CPD accredited, and verifiable via unique QR code.</p>
-                                    </div>
-                                    <div class="absolute top-0 right-0 w-12 h-12 bg-brandBlue text-white rounded-bl-3xl flex items-center justify-center">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                    </div>
-                                </label>
+        <!-- Summary & Checkout -->
+        <div class="lg:sticky lg:top-24 h-fit">
+            <div class="bg-card border rounded-[2rem] p-10 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-brandBlue/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                
+                <h3 class="font-bold text-foreground text-sm uppercase tracking-widest mb-10 border-b pb-4">Professional Intent</h3>
+                
+                <div class="space-y-6 mb-12">
+                    <div class="flex justify-between items-center group">
+                        <span class="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Course Module Fee</span>
+                        <span class="text-sm font-black">£<?php echo number_format($base_price, 2); ?></span>
+                    </div>
+                    
+                    <?php if ($voucher_discount > 0): ?>
+                        <div class="flex justify-between items-center text-brandGreen">
+                            <span class="text-sm font-bold">Voucher Deduction</span>
+                            <span class="text-sm font-black">- £<?php echo number_format($voucher_discount, 2); ?></span>
+                        </div>
+                    <?php endif; ?>
 
-                                <label class="flex items-start p-5 rounded-2xl border-2 border-gray-100 hover:border-brandGreen transition cursor-pointer group">
-                                    <input type="checkbox" name="hard_copy" id="hard_copy_toggle" class="mt-1 w-5 h-5 text-brandGreen border-gray-300 rounded focus:ring-brandGreen">
-                                    <div class="ml-4">
-                                        <div class="flex justify-between items-center mb-1">
-                                            <span class="font-bold text-gray-900 group-hover:text-brandGreen transition">Add Hard Copy Card</span>
-                                            <span class="text-gray-900 font-extrabold">+ £25.00</span>
-                                        </div>
-                                        <p class="text-xs text-gray-500 leading-relaxed">Professionally printed physical ID card sent to your address (Free UK Shipping).</p>
-                                    </div>
-                                </label>
-                            </div>
-
-                            <div class="mt-8">
-                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Voucher or Referral Code</label>
-                                <div class="flex space-x-2">
-                                    <input type="text" name="voucher_code" class="flex-grow px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brandBlue/20 outline-none text-sm" placeholder="ENTER CODE">
-                                    <button type="submit" name="apply_voucher" class="bg-gray-900 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase hover:bg-black transition">Apply</button>
-                                </div>
-                            </div>
-                        </form>
+                    <div id="hardCopyRow" class="hidden flex justify-between items-center text-brandBlue">
+                        <span class="text-sm font-bold">PVC ID Card Fabrication</span>
+                        <span class="text-sm font-black">£<?php echo number_format($hard_copy_price, 2); ?></span>
                     </div>
 
-                    <div class="bg-gray-50 p-6 rounded-3xl border border-dashed border-gray-200">
-                        <h4 class="font-bold text-gray-900 mb-2">Secure Payment</h4>
-                        <p class="text-xs text-gray-400 leading-relaxed">Your transaction is protected by 256-bit SSL encryption. We accept all major credit cards and PayPal.</p>
+                    <div class="flex justify-between items-center pt-6 border-t border-dashed">
+                        <div>
+                            <p class="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-60">Payable Total</p>
+                            <h2 id="totalDisplay" class="text-5xl font-black tracking-tighter text-foreground leading-none mt-1">£<?php echo number_format($total_price, 2); ?></h2>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Summary & Checkout -->
-                <div>
-                    <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 sticky top-8">
-                        <h3 class="font-bold text-gray-900 mb-8 border-b border-gray-50 pb-6">Payment Summary</h3>
-                        
-                        <div class="space-y-4 mb-8">
-                            <div class="flex justify-between text-gray-500">
-                                <span>Module Fee (<?php echo $course_data['course_title']; ?>)</span>
-                                <span class="font-semibold text-gray-900">£<?php echo number_format($base_price, 2); ?></span>
-                            </div>
-                            <?php if ($voucher_discount > 0): ?>
-                                <div class="flex justify-between text-brandGreen">
-                                    <span>Voucher Discount</span>
-                                    <span class="font-bold">- £<?php echo number_format($voucher_discount, 2); ?></span>
-                                </div>
-                            <?php endif; ?>
-                            <div id="hardCopyRow" class="hidden flex justify-between text-gray-500">
-                                <span>Hard Copy ID Card</span>
-                                <span class="font-semibold text-gray-900">£25.00</span>
-                            </div>
-                            <div class="flex justify-between text-gray-500">
-                                <span>Learning Platform Fee</span>
-                                <span class="font-semibold text-brandGreen">FREE</span>
-                            </div>
-                        </div>
+                <div class="space-y-4">
+                    <button form="payForm" name="pay_now" class="w-full h-16 bg-brandBlue text-white rounded-2xl font-black text-lg hover:shadow-2xl hover:shadow-brandBlue/20 hover:-translate-y-0.5 active:translate-y-0 transition-all uppercase tracking-widest flex items-center justify-center gap-3">
+                        Proceed to Payment
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="m9 18 6-6-6-6"></path></svg>
+                    </button>
+                    
+                    <p class="text-[10px] text-muted-foreground text-center font-bold uppercase tracking-tighter opacity-40">By proceeding, you agree to our certification conditions & terms.</p>
+                </div>
 
-                        <div class="border-t border-gray-50 pt-6 mb-10 flex justify-between items-end">
-                            <div>
-                                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total Amount</p>
-                                <h2 id="totalDisplay" class="text-4xl font-extrabold text-brandBlue">£<?php echo number_format($total_price, 2); ?></h2>
-                            </div>
-                        </div>
-
-                        <button form="payForm" name="pay_now" class="w-full bg-brandBlue text-white py-5 rounded-2xl font-extrabold text-lg hover:bg-blue-700 transition shadow-xl shadow-brandBlue/20 uppercase tracking-wider">
-                            Complete Purchase
-                        </button>
-                        
-                        <div class="mt-8 flex justify-center space-x-3 opacity-30 grayscale scale-75">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" class="h-6">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" class="h-6">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" class="h-6">
-                        </div>
-                    </div>
+                <div class="mt-12 flex justify-center items-center gap-6 opacity-40 grayscale">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" class="h-4" alt="Visa">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" class="h-5" alt="Mastercard">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" class="h-4" alt="PayPal">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Stripe_logo%2C_revised_2016.png" class="h-4" alt="Stripe">
                 </div>
             </div>
         </div>
-    </main>
+    </div>
+</div>
 
-    <script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
         const hardCopyToggle = document.getElementById('hard_copy_toggle');
         const hardCopyRow = document.getElementById('hardCopyRow');
         const totalDisplay = document.getElementById('totalDisplay');
         const totalBase = <?php echo $total_price; ?>;
+        const hardCopyPrice = <?php echo $hard_copy_price; ?>;
 
         hardCopyToggle.addEventListener('change', function() {
             if (this.checked) {
                 hardCopyRow.classList.remove('hidden');
-                totalDisplay.innerText = '£' + (totalBase + 25).toFixed(2);
+                totalDisplay.innerText = '£' + (totalBase + hardCopyPrice).toFixed(2);
             } else {
                 hardCopyRow.classList.add('hidden');
                 totalDisplay.innerText = '£' + totalBase.toFixed(2);
             }
         });
-    </script>
-</body>
-</html>
+    });
+</script>
+
+<?php include '../includes/footer_student.php'; ?>
